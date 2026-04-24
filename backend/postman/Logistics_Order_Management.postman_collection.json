@@ -1,0 +1,148 @@
+{
+  "info": {
+    "name": "Logistics Order Management API",
+    "_postman_id": "8f8ff1f6-267f-4f0a-a82b-22d73c40aef0",
+    "description": "Postman collection for Logistics Order Management System backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "host", "value": "http://127.0.0.1:8000" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "driver_id", "value": "" },
+    { "key": "vehicle_id", "value": "" },
+    { "key": "assignment_id", "value": "" },
+    { "key": "invoice_id", "value": "" },
+    { "key": "role_id", "value": "" },
+    { "key": "user_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login (Get JWT)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": "{{host}}/api/accounts/auth/token/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.access) {",
+                  "    pm.environment.set('access_token', res.access);",
+                  "}",
+                  "if (res.refresh) {",
+                  "    pm.environment.set('refresh_token', res.refresh);",
+                  "}",
+                  "",
+                  "if (!pm.environment.get('host')) {",
+                  "    const hostFromCollection = pm.collectionVariables.get('host') || 'http://127.0.0.1:8000';",
+                  "    pm.environment.set('host', hostFromCollection);",
+                  "}",
+                  "",
+                  "console.log('Stored access_token, refresh_token, and host in environment variables.');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{host}}/api/accounts/auth/token/refresh/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Roles & Users (RBAC)",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Role", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Admin\",\n  \"code\": \"admin\",\n  \"description\": \"System administrator\"\n}" }, "url": "{{host}}/api/accounts/roles/" } },
+        { "name": "List Roles", "request": { "method": "GET", "url": "{{host}}/api/accounts/roles/" } },
+        { "name": "Create User", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"manager@example.com\",\n  \"username\": \"manager1\",\n  \"password\": \"manager123\",\n  \"first_name\": \"Ops\",\n  \"last_name\": \"Manager\",\n  \"phone\": \"9999999999\",\n  \"role\": \"{{role_id}}\"\n}" }, "url": "{{host}}/api/accounts/users/" } },
+        { "name": "List Users", "request": { "method": "GET", "url": "{{host}}/api/accounts/users/" } }
+      ]
+    },
+    {
+      "name": "3. Orders",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Order", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"order_number\": \"ORD-1001\",\n  \"customer_name\": \"Acme Corp\",\n  \"customer_email\": \"logistics@acme.com\",\n  \"pickup_address\": \"Mumbai Warehouse\",\n  \"dropoff_address\": \"Pune Hub\",\n  \"distance_km\": \"160.50\",\n  \"weight_kg\": \"250.00\"\n}" }, "url": "{{host}}/api/orders/" } },
+        { "name": "List Orders", "request": { "method": "GET", "url": "{{host}}/api/orders/" } },
+        { "name": "Get Order", "request": { "method": "GET", "url": "{{host}}/api/orders/{{order_id}}/" } },
+        { "name": "Transition Status", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"target_status\": \"APPROVED\"\n}" }, "url": "{{host}}/api/orders/{{order_id}}/transition-status/" } },
+        { "name": "Update Tracking", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"current_location\": \"Near Lonavala Toll\"\n}" }, "url": "{{host}}/api/orders/{{order_id}}/tracking/" } }
+      ]
+    },
+    {
+      "name": "4. Vehicles",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Vehicle", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"number_plate\": \"MH12AB1234\",\n  \"vehicle_type\": \"Truck\",\n  \"capacity_kg\": \"1000.00\",\n  \"is_available\": true\n}" }, "url": "{{host}}/api/vehicles/" } },
+        { "name": "List Vehicles", "request": { "method": "GET", "url": "{{host}}/api/vehicles/" } }
+      ]
+    },
+    {
+      "name": "5. Drivers",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Driver", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"full_name\": \"Ramesh Kumar\",\n  \"license_number\": \"DL-2026-XYZ123\",\n  \"phone\": \"8888888888\",\n  \"is_available\": true\n}" }, "url": "{{host}}/api/drivers/" } },
+        { "name": "List Drivers", "request": { "method": "GET", "url": "{{host}}/api/drivers/" } }
+      ]
+    },
+    {
+      "name": "6. Assignments",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Assignment", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"order\": \"{{order_id}}\",\n  \"driver\": \"{{driver_id}}\",\n  \"vehicle\": \"{{vehicle_id}}\"\n}" }, "url": "{{host}}/api/assignments/" } },
+        { "name": "List Assignments", "request": { "method": "GET", "url": "{{host}}/api/assignments/" } }
+      ]
+    },
+    {
+      "name": "7. Pricing",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Pricing Config", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"default-v2\",\n  \"base_rate_per_km\": \"12.50\",\n  \"weight_rate_per_kg\": \"2.25\",\n  \"fuel_surcharge_percent\": \"6.00\"\n}" }, "url": "{{host}}/api/pricing-configs/" } },
+        { "name": "List Pricing Configs", "request": { "method": "GET", "url": "{{host}}/api/pricing-configs/" } }
+      ]
+    },
+    {
+      "name": "8. Invoices",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Create Invoice", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"invoice_number\": \"INV-1001\",\n  \"order\": \"{{order_id}}\",\n  \"due_date\": \"2026-05-15\"\n}" }, "url": "{{host}}/api/invoices/" } },
+        { "name": "List Invoices", "request": { "method": "GET", "url": "{{host}}/api/invoices/" } },
+        { "name": "Issue Invoice", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"confirm\": true\n}" }, "url": "{{host}}/api/invoices/{{invoice_id}}/issue/" } }
+      ]
+    },
+    {
+      "name": "9. Notifications",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "List My Notifications", "request": { "method": "GET", "url": "{{host}}/api/notifications/" } }
+      ]
+    }
+  ]
+}
