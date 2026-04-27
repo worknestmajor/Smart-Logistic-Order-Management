@@ -8,7 +8,7 @@ class OrderSerializer(BaseSerializer):
     class Meta:
         model = Order
         fields = "__all__"
-        read_only_fields = ("id", "created_at", "updated_at", "base_price", "total_price", "approved_by")
+        read_only_fields = ("id", "created_at", "updated_at", "order_number", "base_price", "total_price", "approved_by")
 
 
 class StatusTransitionSerializer(serializers.Serializer):

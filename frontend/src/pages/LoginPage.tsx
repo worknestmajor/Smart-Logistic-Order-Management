@@ -17,6 +17,12 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: '', password: '' });
 
+  const debugAuth = (...args: unknown[]) => {
+    if (import.meta.env.DEV) {
+      console.log('[AUTH DEBUG]', ...args);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard/orders');
@@ -29,15 +35,19 @@ export function LoginPage() {
     try {
       const response = await authService.login(form);
       const tokenUser = authService.buildUserFromToken(response.access);
+      debugAuth('login token user', tokenUser);
       let resolvedUser: User = { email: form.email, ...(tokenUser || {}) };
       try {
         const backendUser = await authService.getUserById(tokenUser?.id);
+        debugAuth('login backend user', backendUser);
         if (backendUser) {
           resolvedUser = await authService.enrichUserRole(backendUser);
         }
       } catch {
+        debugAuth('login backend user fetch failed');
         // Keep token-derived/fallback user when profile endpoint is unavailable.
       }
+      debugAuth('login resolved user', resolvedUser);
 
       setAuth({
         token: response.access,

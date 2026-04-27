@@ -13,6 +13,8 @@ import { DashboardHomePage } from './pages/DashboardHomePage';
 import { PricingPage } from './pages/PricingPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { AdminPage } from './pages/AdminPage';
+import { AdminUsersPage } from './pages/AdminUsersPage';
+import { AdminRolesPage } from './pages/AdminRolesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { useAuthStore } from './store/authStore';
 import { authService } from './services/authService';
@@ -23,6 +25,12 @@ function App() {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+
+  const debugAuth = (...args: unknown[]) => {
+    if (import.meta.env.DEV) {
+      console.log('[AUTH DEBUG]', ...args);
+    }
+  };
 
   useEffect(() => {
     const onUnauthorized = () => {
@@ -36,16 +44,23 @@ function App() {
 
   useEffect(() => {
     const bootstrapUser = async () => {
-      if (!token || user?.id) return;
+      if (!token) return;
+      const currentRole = String(user?.role || user?.user_role || '').toLowerCase();
+      const hasResolvedRole = currentRole.includes('admin') || currentRole.includes('manager');
+      debugAuth('bootstrapUser start', { tokenExists: !!token, user, hasResolvedRole });
+      if (user?.id && hasResolvedRole) return;
       const tokenUser = authService.buildUserFromToken(token);
       if (!tokenUser) return;
       setUser(tokenUser);
       try {
         const backendUser = await authService.getUserById(tokenUser.id);
         if (backendUser) {
-          setUser(await authService.enrichUserRole(backendUser));
+          const resolvedUser = await authService.enrichUserRole(backendUser);
+          debugAuth('bootstrapUser resolved user', resolvedUser);
+          setUser(resolvedUser);
         }
       } catch {
+        debugAuth('bootstrapUser failed to fetch/enrich backend user');
         // Keep token user when endpoint or permissions are unavailable.
       }
     };
@@ -69,6 +84,8 @@ function App() {
           <Route path='/dashboard/invoices' element={<InvoicesPage />} />
           <Route path='/dashboard/notifications' element={<NotificationsPage />} />
           <Route path='/dashboard/admin' element={<AdminPage />} />
+          <Route path='/dashboard/admin/users' element={<AdminUsersPage />} />
+          <Route path='/dashboard/admin/roles' element={<AdminRolesPage />} />
         </Route>
       </Route>
 

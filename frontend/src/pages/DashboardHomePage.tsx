@@ -9,8 +9,6 @@ import { notificationService } from '../services/notificationService';
 import { getApiErrorMessage } from '../utils/error';
 import type { Assignment, Invoice, NotificationItem, Order } from '../types';
 
-const normalizeListPayload = (payload) => payload?.data?.results || payload?.data || [];
-
 const cardStyle = 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm';
 
 export function DashboardHomePage() {
@@ -30,10 +28,10 @@ export function DashboardHomePage() {
         invoiceService.list(),
         notificationService.list(),
       ]);
-      setOrders(normalizeListPayload(ordersRes));
-      setAssignments(normalizeListPayload(assignmentsRes));
-      setInvoices(normalizeListPayload(invoicesRes));
-      setNotifications(Array.isArray(notificationsRes) ? notificationsRes : []);
+      setOrders(ordersRes);
+      setAssignments(assignmentsRes);
+      setInvoices(invoicesRes);
+      setNotifications(notificationsRes);
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Failed to load dashboard summary'), 'error');
     } finally {
@@ -47,6 +45,7 @@ export function DashboardHomePage() {
 
   const summary = useMemo(() => {
     const approvedOrders = orders.filter((order) => order.status === 'APPROVED');
+    const draftInvoices = invoices.filter((invoice) => invoice.status === 'DRAFT');
     const inTransitOrders = orders.filter((order) => order.status === 'IN_TRANSIT');
     const deliveredOrders = orders.filter((order) => order.status === 'DELIVERED');
     const invoicedOrders = orders.filter((order) => order.status === 'INVOICED');
@@ -61,6 +60,7 @@ export function DashboardHomePage() {
       deliveredOrders: deliveredOrders.length,
       invoicedOrders: invoicedOrders.length,
       issuedInvoices: issuedInvoices.length,
+      draftInvoices: draftInvoices.length,
       unreadNotifications: unreadNotifications.length,
     };
   }, [orders, assignments, invoices, notifications]);
@@ -93,17 +93,17 @@ export function DashboardHomePage() {
       </div>
 
       <div className='grid grid-cols-1 gap-4 lg:grid-cols-3'>
-        <Link className={`${cardStyle} hover:border-blue-300`} to='/dashboard/orders'>
+        <Link className={`${cardStyle} hover:border-blue-300`} to='/dashboard/orders?status=APPROVED'>
           <h3 className='font-semibold text-slate-800'>Create and Progress Orders</h3>
-          <p className='mt-2 text-sm text-slate-600'>Track full lifecycle from created to invoiced.</p>
+          <p className='mt-2 text-sm text-slate-600'>Review approved orders ready for assignment.</p>
         </Link>
         <Link className={`${cardStyle} hover:border-blue-300`} to='/dashboard/assignments'>
           <h3 className='font-semibold text-slate-800'>Assign Driver and Vehicle</h3>
           <p className='mt-2 text-sm text-slate-600'>Pair approved orders with available fleet resources.</p>
         </Link>
-        <Link className={`${cardStyle} hover:border-blue-300`} to='/dashboard/invoices'>
+        <Link className={`${cardStyle} hover:border-blue-300`} to='/dashboard/invoices?status=DRAFT'>
           <h3 className='font-semibold text-slate-800'>Issue Invoices</h3>
-          <p className='mt-2 text-sm text-slate-600'>Generate invoices for delivered orders and track status.</p>
+          <p className='mt-2 text-sm text-slate-600'>{summary.draftInvoices} draft invoices pending issue.</p>
         </Link>
       </div>
     </div>

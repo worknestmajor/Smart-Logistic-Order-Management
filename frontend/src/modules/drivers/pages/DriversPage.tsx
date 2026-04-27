@@ -18,8 +18,7 @@ export function DriversPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await driverService.list();
-      setItems(response?.data?.results || response?.data || []);
+      setItems(await driverService.list());
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Failed to fetch drivers'), 'error');
     } finally {

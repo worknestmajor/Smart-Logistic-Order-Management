@@ -19,8 +19,7 @@ export function VehiclesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await vehicleService.list();
-      setItems(response?.data?.results || response?.data || []);
+      setItems(await vehicleService.list());
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Failed to fetch vehicles'), 'error');
     } finally {

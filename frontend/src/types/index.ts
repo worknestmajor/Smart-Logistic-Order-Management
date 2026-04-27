@@ -38,7 +38,11 @@ export interface Order {
   dropoff_address?: string;
   distance_km?: string | number;
   weight_kg?: string | number;
+  base_price?: string | number;
   total_price?: string | number;
+  current_location?: string;
+  last_location_update?: string;
+  created_at?: string;
   status: string;
 }
 
@@ -73,6 +77,8 @@ export interface Invoice {
   amount?: string | number;
   status: string;
   due_date?: string;
+  issued_at?: string;
+  paid_at?: string;
 }
 
 export interface PricingConfig {

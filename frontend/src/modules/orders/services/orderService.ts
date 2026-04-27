@@ -1,9 +1,12 @@
 import apiClient from '../../../services/apiClient';
+import { unwrapApiData, unwrapApiList } from '../../../utils/api';
 import type { Order } from '../../../types';
 
+export type OrderCreatePayload = Omit<Order, 'id' | 'order_number' | 'status' | 'total_price'>;
+
 export const orderService = {
-  list: async () => (await apiClient.get('/api/orders/')).data,
-  create: async (payload: Omit<Order, 'id' | 'status' | 'total_price'>) => (await apiClient.post('/api/orders/', payload)).data,
-  transition: async (id: number, target_status: string) => (await apiClient.post(`/api/orders/${id}/transition-status/`, { target_status })).data,
-  tracking: async (id: number, current_location: string) => (await apiClient.post(`/api/orders/${id}/tracking/`, { current_location })).data,
+  list: async () => unwrapApiList<Order>(await apiClient.get('/api/orders/')),
+  create: async (payload: OrderCreatePayload) => unwrapApiData<Order>(await apiClient.post('/api/orders/', payload)),
+  transition: async (id: number, target_status: string) => unwrapApiData<Order>(await apiClient.post(`/api/orders/${id}/transition-status/`, { target_status })),
+  tracking: async (id: number, current_location: string) => unwrapApiData<Order>(await apiClient.post(`/api/orders/${id}/tracking/`, { current_location })),
 };

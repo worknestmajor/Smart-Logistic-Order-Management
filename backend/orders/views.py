@@ -30,8 +30,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = self.get_object()
         serializer = StatusTransitionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        target_status = serializer.validated_data["target_status"]
+        user_role_code = getattr(getattr(request.user, "role", None), "code", None)
+        if target_status == "APPROVED" and not (request.user.is_superuser or user_role_code == "admin"):
+            return error_response("Only admin can approve orders", status_code=status.HTTP_403_FORBIDDEN)
         try:
-            updated = self.manager.transition_status(order, serializer.validated_data["target_status"], request.user)
+            updated = self.manager.transition_status(order, target_status, request.user)
         except ValueError as exc:
             return error_response(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
         return success_response("Status updated", self.get_serializer(updated).data)

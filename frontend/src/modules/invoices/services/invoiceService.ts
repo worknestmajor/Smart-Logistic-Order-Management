@@ -1,8 +1,9 @@
 import apiClient from '../../../services/apiClient';
+import { unwrapApiData, unwrapApiList } from '../../../utils/api';
 import type { Invoice } from '../../../types';
 
 export const invoiceService = {
-  list: async () => (await apiClient.get('/api/invoices/')).data,
-  create: async (payload: Omit<Invoice, 'id' | 'amount' | 'status'>) => (await apiClient.post('/api/invoices/', payload)).data,
-  issue: async (id: number) => (await apiClient.post(`/api/invoices/${id}/issue/`, { confirm: true })).data,
+  list: async () => unwrapApiList<Invoice>(await apiClient.get('/api/invoices/')),
+  create: async (payload: Omit<Invoice, 'id' | 'amount' | 'status'>) => unwrapApiData<Invoice>(await apiClient.post('/api/invoices/', payload)),
+  issue: async (id: number) => unwrapApiData<Invoice>(await apiClient.post(`/api/invoices/${id}/issue/`, { confirm: true })),
 };

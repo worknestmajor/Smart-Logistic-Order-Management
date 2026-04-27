@@ -12,8 +12,7 @@ export function useOrders() {
     setLoading(true);
     setError('');
     try {
-      const response = await orderService.list();
-      const payload = response?.data?.results || response?.data || [];
+      const payload = await orderService.list();
       setOrders(Array.isArray(payload) ? payload : []);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Failed to fetch orders'));
