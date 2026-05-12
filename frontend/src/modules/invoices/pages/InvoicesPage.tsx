@@ -6,6 +6,7 @@ import { BaseDatePicker } from '../../../components/base/BaseDatePicker';
 import { BaseForm } from '../../../components/base/BaseForm';
 import { BaseInput } from '../../../components/base/BaseInput';
 import { BaseLoader } from '../../../components/base/BaseLoader';
+import { BaseModal } from '../../../components/base/BaseModal';
 import { BaseSelect } from '../../../components/base/BaseSelect';
 import { BaseTable } from '../../../components/base/BaseTable';
 import { useToast } from '../../../components/base/BaseToast';
@@ -22,6 +23,7 @@ export function InvoicesPage() {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ invoice_number: '', order: '', due_date: '' });
   const statusFilter = searchParams.get('status') || '';
 
@@ -46,6 +48,7 @@ export function InvoicesPage() {
     try {
       await invoiceService.create({ ...form, order: form.order });
       setForm({ invoice_number: '', order: '', due_date: '' });
+      setShowCreate(false);
       showToast('Invoice created', 'success');
       fetchData();
     } catch (err) {
@@ -73,16 +76,20 @@ export function InvoicesPage() {
           <h2 className='text-xl font-bold'>Invoices</h2>
           {statusFilter && <p className='text-xs text-blue-700'>Filtered by {statusFilter}. <Link to='/dashboard/invoices' className='underline'>Clear</Link></p>}
         </div>
-        <BaseButton variant='secondary' onClick={fetchData}>Refresh</BaseButton>
+        <div className='flex items-center gap-2'>
+          <BaseButton variant='secondary' onClick={fetchData}>Refresh</BaseButton>
+          <BaseButton onClick={() => setShowCreate(true)}>+ New Invoice</BaseButton>
+        </div>
       </div>
-      <div className='rounded-xl border bg-white p-4'>
+
+      <BaseModal open={showCreate} title='Create Invoice' onClose={() => setShowCreate(false)}>
         <BaseForm onSubmit={createInvoice} className='grid grid-cols-1 gap-3 md:grid-cols-4'>
           <BaseInput label='Invoice Number' value={form.invoice_number} onChange={(e) => setForm((p) => ({ ...p, invoice_number: e.target.value }))} required />
           <BaseSelect label='Order' value={form.order} onChange={(e) => setForm((p) => ({ ...p, order: e.target.value }))} options={[{ value: '', label: 'Select Delivered Order' }, ...orders.map((o) => ({ value: o.id, label: o.order_number }))]} required />
           <BaseDatePicker label='Due Date' value={form.due_date} onChange={(e) => setForm((p) => ({ ...p, due_date: e.target.value }))} required />
           <div className='self-end'><BaseButton type='submit'>Create Invoice</BaseButton></div>
         </BaseForm>
-      </div>
+      </BaseModal>
       {loading ? (
         <BaseLoader />
       ) : (

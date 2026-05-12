@@ -182,7 +182,6 @@ export function OrdersPage() {
       <div className='flex items-center justify-between'>
         <div>
           <h2 className='text-xl font-bold text-slate-800'>Orders</h2>
-          <p className='text-sm text-slate-500'>Create and manage order lifecycle</p>
           {(statusFilter || orderIdFilter) && (
             <p className='mt-1 text-xs text-blue-700'>
               Filter active:

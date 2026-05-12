@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BaseButton } from '../../../components/base/BaseButton';
 import { BaseForm } from '../../../components/base/BaseForm';
+import { BaseModal } from '../../../components/base/BaseModal';
 import { BaseSelect } from '../../../components/base/BaseSelect';
 import { BaseTable } from '../../../components/base/BaseTable';
 import { BaseLoader } from '../../../components/base/BaseLoader';
@@ -26,6 +27,7 @@ export function AssignmentsPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ order: '', driver: '', vehicle: '' });
 
   const fetchAll = async () => {
@@ -70,6 +72,7 @@ export function AssignmentsPage() {
         vehicle: form.vehicle,
       });
       setForm({ order: '', driver: '', vehicle: '' });
+      setShowCreate(false);
       showToast('Assignment created', 'success');
       fetchAll();
     } catch (err) {
@@ -92,10 +95,13 @@ export function AssignmentsPage() {
             Only approved orders and available drivers/vehicles are shown.
           </p>
         </div>
-        <BaseButton variant='secondary' onClick={fetchAll}>Refresh</BaseButton>
+        <div className='flex items-center gap-2'>
+          <BaseButton variant='secondary' onClick={fetchAll}>Refresh</BaseButton>
+          <BaseButton onClick={() => setShowCreate(true)}>+ New Assignment</BaseButton>
+        </div>
       </div>
 
-      <div className='rounded-xl border bg-white p-4'>
+      <BaseModal open={showCreate} title='Create Assignment' onClose={() => setShowCreate(false)}>
         <BaseForm onSubmit={onSubmit} className='grid grid-cols-1 gap-3 md:grid-cols-4'>
           <BaseSelect
             label='Order'
@@ -121,7 +127,7 @@ export function AssignmentsPage() {
           <div className='self-end'><BaseButton type='submit'>Assign</BaseButton></div>
         </BaseForm>
         {formError && <p className='mt-3 text-sm text-red-600'>{formError}</p>}
-      </div>
+      </BaseModal>
 
       {loading ? (
         <BaseLoader />

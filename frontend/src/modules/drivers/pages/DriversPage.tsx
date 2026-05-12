@@ -3,6 +3,7 @@ import { BaseButton } from '../../../components/base/BaseButton';
 import { BaseForm } from '../../../components/base/BaseForm';
 import { BaseInput } from '../../../components/base/BaseInput';
 import { BaseLoader } from '../../../components/base/BaseLoader';
+import { BaseModal } from '../../../components/base/BaseModal';
 import { BaseTable } from '../../../components/base/BaseTable';
 import { useToast } from '../../../components/base/BaseToast';
 import { getApiErrorMessage } from '../../../utils/error';
@@ -13,6 +14,7 @@ export function DriversPage() {
   const { showToast } = useToast();
   const [items, setItems] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ full_name: '', license_number: '', phone: '' });
 
   const fetchData = async () => {
@@ -34,6 +36,7 @@ export function DriversPage() {
       await driverService.create({ ...form, is_available: true });
       setForm({ full_name: '', license_number: '', phone: '' });
       showToast('Driver created', 'success');
+      setShowCreate(false);
       fetchData();
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Failed to create driver'), 'error');
@@ -42,16 +45,22 @@ export function DriversPage() {
 
   return (
     <div className='space-y-4'>
-      <h2 className='text-xl font-bold'>Drivers</h2>
-      <div className='rounded-xl border bg-white p-4'>
+      <div className='flex items-center justify-between'>
+        <h2 className='text-xl font-bold'>Drivers</h2>
+        <div className='flex items-center gap-2'>
+          <BaseButton variant='secondary' onClick={fetchData}>Refresh</BaseButton>
+          <BaseButton onClick={() => setShowCreate(true)}>+ New Driver</BaseButton>
+        </div>
+      </div>
+      {loading ? <BaseLoader /> : <BaseTable columns={[{ key: 'full_name', title: 'Name' }, { key: 'license_number', title: 'License' }, { key: 'phone', title: 'Phone' }, { key: 'is_available', title: 'Available', render: (v) => (v ? 'Yes' : 'No') }]} data={items} />}
+      <BaseModal open={showCreate} title='Create Driver' onClose={() => setShowCreate(false)}>
         <BaseForm onSubmit={onSubmit} className='grid grid-cols-1 gap-3 md:grid-cols-4'>
           <BaseInput label='Full Name' value={form.full_name} onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))} required />
           <BaseInput label='License Number' value={form.license_number} onChange={(e) => setForm((p) => ({ ...p, license_number: e.target.value }))} required />
           <BaseInput label='Phone' value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} required />
           <div className='self-end'><BaseButton type='submit'>Add Driver</BaseButton></div>
         </BaseForm>
-      </div>
-      {loading ? <BaseLoader /> : <BaseTable columns={[{ key: 'full_name', title: 'Name' }, { key: 'license_number', title: 'License' }, { key: 'phone', title: 'Phone' }, { key: 'is_available', title: 'Available', render: (v) => (v ? 'Yes' : 'No') }]} data={items} />}
+      </BaseModal>
     </div>
   );
 }
